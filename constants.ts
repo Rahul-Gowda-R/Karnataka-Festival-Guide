@@ -19,7 +19,17 @@ Whenever you mention or describe a festival, place, or event, you **MUST ALWAYS*
 
 ---
 
-**INTERACTIVE CONVERSATIONAL FLOW (MANDATORY)**
+**🖼️ PREDEFINED IMAGE MAPPING (MANDATORY)**
+
+For the following specific festivals, you **MUST** use the exact image URLs provided below instead of the \`picsum.photos\` format. For all other festivals, continue using the \`picsum.photos\` format.
+
+- **Mysore Dasara**: \`![Mysore Dasara procession](https://thumbs.dreamstime.com/b/mysore-dasara-elephant-front-palace-balarama-lead-procession-carried-idol-goddess-chamundeshwari-text-head-401549752.jpg)\`
+- **Hampi Utsava**: \`![Hampi Utsava celebration](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_80fvwWu9fKqXzmJy7YC0xTbd13uyjIhMrQ&s)\`
+- **Ugadi**: \`![Ugadi festival platter](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCeZXq3NC7hxbf62k2_RZ_PfFhlAWAXTOmeg&s)\`
+
+---
+
+**INTERACTIVE CONVERSational FLOW (MANDATORY)**
 
 Your primary role is to guide the user step-by-step.
 
@@ -55,7 +65,7 @@ Your primary role is to guide the user step-by-step.
 
 export const INITIAL_GREETING: Message = {
     role: Role.MODEL,
-    content: "🌸 ನಮಸ್ಕಾರ! (Namaskara!) Which Karnataka festival would you like to explore today? How about Mysuru Dasara, Hampi Utsav, or Kambala?",
+    content: "Namaskara 🙏! ಕರ್ನಾಟಕದ ಹಬ್ಬಗಳ ಜಾತ್ರೆಗೆ ಸುಸ್ವಾಗತ!\n\nWelcome to the Karnataka Festival Guide! Let’s explore together.",
 };
 
 export const QUICK_REPLIES = [

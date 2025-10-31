@@ -5,6 +5,8 @@ import { SYSTEM_INSTRUCTION, INITIAL_GREETING, QUICK_REPLIES } from './constants
 import ChatBubble from './components/ChatBubble';
 import ChatInput from './components/ChatInput';
 import QuickReplies from './components/QuickReplies';
+import Header from './components/Header';
+import LandingPage from './components/LandingPage';
 
 const getChatSession = (): Chat => {
     if (!process.env.API_KEY) {
@@ -21,6 +23,7 @@ const getChatSession = (): Chat => {
 
 
 const App: React.FC = () => {
+  const [showChat, setShowChat] = useState<boolean>(false);
   const [chatSession, setChatSession] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([INITIAL_GREETING]);
   const [userInput, setUserInput] = useState<string>('');
@@ -30,142 +33,118 @@ const App: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setChatSession(getChatSession());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages, isLoading, chipOptions]);
 
+  const handleStartChat = () => {
+    if (!chatSession) {
+      setChatSession(getChatSession());
+    }
+    setShowChat(true);
+  };
+
   const handleSendMessage = async (messageText: string) => {
     if (isLoading || !messageText.trim() || !chatSession) return;
 
-    // Hide all interactive elements when a message is sent
     setIsLoading(true);
     if (showQuickReplies) setShowQuickReplies(false);
     if (chipOptions) setChipOptions(null);
 
     const userMessage: Message = { role: Role.USER, content: messageText };
-    setMessages(prev => [...prev, userMessage]);
-
-    // Add a placeholder for streaming
-    setMessages(prev => [...prev, { role: Role.MODEL, content: '' }]);
+    setMessages(prevMessages => [...prevMessages, userMessage]);
     
-    let streamedText = '';
+    // Add a placeholder for the model's response to attach the streaming text to.
+    const modelMessagePlaceholder: Message = { role: Role.MODEL, content: '' };
+    setMessages(prevMessages => [...prevMessages, modelMessagePlaceholder]);
+
     try {
       const stream = await chatSession.sendMessageStream({ message: messageText });
-      
+
+      let modelResponse = '';
       for await (const chunk of stream) {
-        streamedText += chunk.text;
-        setMessages(prev => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1].content = streamedText;
+        modelResponse += chunk.text;
+        // Update the content of the last message (the placeholder) in real-time
+        setMessages(prevMessages => {
+          const newMessages = [...prevMessages];
+          newMessages[newMessages.length - 1] = { ...newMessages[newMessages.length - 1], content: modelResponse };
           return newMessages;
         });
       }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      const errorMessage: Message = {
-        role: Role.MODEL,
-        content: "Sorry, I encountered an error. Please try again. ಕ್ಷಮಿಸಿ, ದೋಷ ಕಂಡುಬಂದಿದೆ.",
-      };
-      setMessages(prev => {
-        const newMessages = [...prev];
-        newMessages[newMessages.length - 1] = errorMessage;
-        return newMessages;
-    });
-    } finally {
-      setIsLoading(false);
-      
-      // After the bot responds, parse the text for chips JSON
-      const jsonRegex = /{\s*"type":\s*"chips"[\s\S]*}/;
-      const match = streamedText.match(jsonRegex);
-      let displayText = streamedText;
-      let newChips = null;
 
-      if (match && match[0]) {
-          try {
-              const parsed = JSON.parse(match[0]);
-              if (parsed.type === 'chips' && Array.isArray(parsed.options)) {
-                  displayText = streamedText.replace(jsonRegex, '').trim();
-                  newChips = parsed.options;
-              }
-          } catch (e) {
-              console.error("Failed to parse chips JSON from model response:", e);
+      // After streaming, parse for JSON chips
+      const finalResponse = modelResponse.trim();
+      const jsonMatch = finalResponse.match(/(\{[\s\S]*\})$/);
+      let contentWithoutJson = finalResponse;
+      let options: string[] | null = null;
+
+      if (jsonMatch) {
+        try {
+          const parsedJson = JSON.parse(jsonMatch[1]);
+          if (parsedJson.type === 'chips' && Array.isArray(parsedJson.options)) {
+            contentWithoutJson = finalResponse.substring(0, jsonMatch.index).trim();
+            options = parsedJson.options;
           }
+        } catch (e) {
+          console.error("Failed to parse JSON from model response:", e);
+        }
       }
-      
-      // Update the final message content with only the display text
-      setMessages(prev => {
-          const newMessages = [...prev];
-          const lastMsg = newMessages[newMessages.length - 1];
-          if (lastMsg && lastMsg.role === Role.MODEL) {
-            lastMsg.content = displayText;
-          }
-          return newMessages;
+
+      setMessages(prevMessages => {
+        const newMessages = [...prevMessages];
+        newMessages[newMessages.length - 1].content = contentWithoutJson;
+        return newMessages;
       });
 
-      // Set the new chips to be displayed
-      if (newChips) {
-          setChipOptions(newChips);
+      if (options) {
+        setChipOptions(options);
       }
+
+    } catch (error) {
+      console.error("Error sending message:", error);
+      const errorMessage: Message = { role: Role.MODEL, content: "Sorry, I encountered an error. Please try again." };
+       setMessages(prevMessages => {
+          const newMessages = [...prevMessages];
+          newMessages[newMessages.length - 1] = errorMessage;
+          return newMessages;
+       });
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  const lastMessage = messages[messages.length - 1];
-  const showTypingIndicator = isLoading && lastMessage?.role === Role.MODEL && !lastMessage.content;
+
+  if (!showChat) {
+    return (
+      <>
+        <LandingPage onStartChat={handleStartChat} />
+        <button
+          onClick={handleStartChat}
+          className="fixed bottom-6 right-6 md:bottom-8 md:right-8 bg-[#CD202C] text-white p-4 rounded-full shadow-2xl hover:bg-[#FFCC00] hover:text-black focus:outline-none focus:ring-4 focus:ring-red-300 transition-all transform hover:scale-110 z-50"
+          aria-label="Open chat"
+        >
+           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+          </svg>
+        </button>
+      </>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white font-sans" style={{ backgroundImage: `radial-gradient(circle at top right, rgba(220, 38, 38, 0.1), transparent 40%), radial-gradient(circle at bottom left, rgba(234, 179, 8, 0.1), transparent 40%)` }}>
-      <header className="p-4 text-center border-b border-yellow-600/30 bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-yellow-400 shrink-0">
-        <h1 className="text-2xl md:text-3xl font-bold">Karnataka Festival Guide</h1>
-        <p className="text-sm text-gray-400">Your AI guide to the land of celebrations</p>
-      </header>
-
-      <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex flex-col h-full bg-[#FFFBEB]">
+      <Header />
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-2">
         {messages.map((msg, index) => (
           <ChatBubble key={index} message={msg} />
         ))}
-        {showTypingIndicator && (
-          <div className="flex justify-start items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white text-sm flex-shrink-0">KFG</div>
-              <div className="flex items-center gap-2 text-gray-400">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse [animation-delay:0.2s]"></div>
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse [animation-delay:0.4s]"></div>
-              </div>
-          </div>
-        )}
-      </main>
-      
-      <div className="shrink-0">
-        {showQuickReplies && (
-            <QuickReplies
-                replies={QUICK_REPLIES}
-                onQuickReplyClick={handleSendMessage}
-                disabled={isLoading}
-            />
-        )}
-        {chipOptions && !isLoading && (
-            <QuickReplies
-                replies={chipOptions}
-                onQuickReplyClick={handleSendMessage}
-                disabled={isLoading}
-            />
-        )}
+         {isLoading && <div className="flex justify-start pl-12"><div className="w-16 h-8 bg-yellow-100 border border-yellow-200 rounded-xl flex items-center justify-center"><div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mx-1 delay-75"></div><div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mx-1 delay-150"></div><div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mx-1 delay-300"></div></div></div>}
       </div>
-
-      <footer className="sticky bottom-0 shrink-0">
-        <ChatInput
-          userInput={userInput}
-          setUserInput={setUserInput}
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-        />
-      </footer>
+      <div className="shrink-0 p-2 md:p-4 bg-white/50 backdrop-blur-sm border-t border-yellow-200">
+        {chipOptions && !isLoading && <QuickReplies replies={chipOptions} onQuickReplyClick={handleSendMessage} disabled={isLoading} />}
+        {showQuickReplies && !isLoading && <QuickReplies replies={QUICK_REPLIES} onQuickReplyClick={handleSendMessage} disabled={isLoading} />}
+        <ChatInput userInput={userInput} setUserInput={setUserInput} onSendMessage={handleSendMessage} isLoading={isLoading} />
+      </div>
     </div>
   );
 };

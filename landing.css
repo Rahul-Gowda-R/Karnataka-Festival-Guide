@@ -1,0 +1,79 @@
+:root {
+  --k-red: #CD202C;
+  --k-yellow: #FFCC00;
+  --k-dark: #000000;
+  --k-white: #FFFFFF;
+}
+
+/* Vibrant gradient background for the landing page */
+.landing-page-bg {
+  background-color: var(--k-white);
+  transition: all 0.5s ease-in-out;
+}
+
+.hero-bg {
+  background: linear-gradient(135deg, var(--k-yellow) 0%, var(--k-red) 100%);
+}
+
+
+/* Kannada + English blended font style */
+.kannada-font {
+  font-family: 'Noto Sans Kannada', 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+/* Elegant fade-in animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 1s ease-out forwards;
+}
+.fade-in-delay-1 { animation-delay: 0.2s; }
+.fade-in-delay-2 { animation-delay: 0.4s; }
+.fade-in-delay-3 { animation-delay: 0.6s; }
+
+/* Interactive hover effects for cards */
+.festival-card {
+  background: #FFFFFF;
+  border: 1px solid #E0E0E0;
+  border-radius: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  color: #000000;
+}
+
+.festival-card:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(205, 32, 44, 0.15);
+  border-color: var(--k-red);
+}
+
+/* Button effects */
+.btn-explore {
+  background: var(--k-red);
+  color: var(--k-yellow);
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-explore:hover {
+  background: var(--k-yellow);
+  color: var(--k-dark);
+  transform: scale(1.05);
+}
+
+/* Footer polish */
+footer {
+  background: #FFFBEB;
+  color: #333333;
+  border-top: 1px solid #FEEFC1;
+}

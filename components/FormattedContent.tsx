@@ -19,7 +19,7 @@ const FormattedContent: React.FC<FormattedContentProps> = ({ content }) => {
       
     // Process inline formatting and images
     html = html
-      .replace(/!\[(.*?)\]\((.*?)\)/g, '<figure class="my-4"><img src="$2" alt="$1" class="rounded-lg shadow-lg mx-auto" /><figcaption class="text-center text-sm text-gray-400 mt-2 italic">$1</figcaption></figure>') // Images with captions
+      .replace(/!\[(.*?)\]\((.*?)\)/g, '<figure class="my-4"><img src="$2" alt="$1" class="rounded-lg shadow-lg mx-auto" /><figcaption class="text-center text-sm opacity-80 mt-2 italic">$1</figcaption></figure>') // Images with captions
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
       .replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italics
 
@@ -27,7 +27,7 @@ const FormattedContent: React.FC<FormattedContentProps> = ({ content }) => {
     return html.replace(/\n/g, '<br />');
   };
 
-  return <div className="prose prose-sm prose-invert text-gray-200" dangerouslySetInnerHTML={{ __html: formatText(content) }} />;
+  return <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: formatText(content) }} />;
 };
 
 export default FormattedContent;

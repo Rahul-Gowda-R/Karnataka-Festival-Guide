@@ -23,19 +23,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ userInput, setUserInput, onSendMe
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 p-2 bg-black/50 border-t border-yellow-600/30">
+    <form onSubmit={handleSubmit} className="flex items-center gap-2">
       <input
         type="text"
         value={userInput}
         onChange={(e) => setUserInput(e.target.value)}
         placeholder="Ask about Karnataka's festivals..."
         disabled={isLoading}
-        className="flex-grow p-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all w-full"
+        className="flex-grow p-3 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#CD202C] transition-all w-full"
       />
       <button
         type="submit"
         disabled={isLoading || !userInput.trim()}
-        className="p-3 bg-gradient-to-br from-red-600 to-yellow-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90 flex items-center justify-center shrink-0"
+        className="p-3 bg-[#CD202C] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:bg-red-700 flex items-center justify-center shrink-0"
       >
         {isLoading ? (
           <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
